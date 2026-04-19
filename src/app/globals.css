@@ -1,0 +1,211 @@
+/* ==========================================================
+ * Pikkukirja — Tuli Light + Tuli Dark theme tokens
+ * Drop-in replacement for src/app/globals.css
+ *
+ * CHANGES FROM BASELINE:
+ *   1. Palette: grayscale-neutral  →  Tuli (warm paper + brick + sage)
+ *   2. Adds semantic tokens: --positive, --warn, --info (optional, used below)
+ *   3. Radius unchanged (0.625rem) so components keep their shape
+ *   4. Font vars expect Inter Tight (sans) + JetBrains Mono (mono)
+ *      — see layout.tsx change in the handoff README
+ * ========================================================== */
+
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-heading: var(--font-sans);
+
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  /* New semantic tokens (optional — safe to use where it helps) */
+  --color-positive: var(--positive);
+  --color-positive-foreground: var(--positive-foreground);
+  --color-warn: var(--warn);
+  --color-warn-foreground: var(--warn-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* ──────────────────────────────────────────────────────────
+ * TULI · LIGHT (default)
+ * Warm cream paper + ink + brick primary + sage positive.
+ * ────────────────────────────────────────────────────────── */
+:root {
+  /* surfaces */
+  --background:          oklch(0.975 0.008 85);    /* cream paper */
+  --foreground:          oklch(0.185 0.010 60);    /* warm ink */
+  --card:                oklch(0.995 0.004 85);
+  --card-foreground:     oklch(0.185 0.010 60);
+  --popover:             oklch(0.995 0.004 85);
+  --popover-foreground:  oklch(0.185 0.010 60);
+
+  /* primary — brick */
+  --primary:             oklch(0.510 0.130 35);
+  --primary-foreground:  oklch(0.985 0.004 85);
+
+  /* secondary / muted / accent — quiet warm surfaces */
+  --secondary:             oklch(0.955 0.010 85);
+  --secondary-foreground:  oklch(0.185 0.010 60);
+  --muted:                 oklch(0.955 0.010 85);
+  --muted-foreground:      oklch(0.520 0.010 60);
+  --accent:                oklch(0.940 0.014 80);
+  --accent-foreground:     oklch(0.185 0.010 60);
+
+  /* status */
+  --destructive:           oklch(0.520 0.150 25);
+  --positive:              oklch(0.540 0.070 140);   /* sage */
+  --positive-foreground:   oklch(0.985 0.004 85);
+  --warn:                  oklch(0.650 0.120 70);    /* amber */
+  --warn-foreground:       oklch(0.185 0.010 60);
+  --info:                  oklch(0.520 0.080 220);
+  --info-foreground:       oklch(0.985 0.004 85);
+
+  /* borders / inputs / focus */
+  --border:  oklch(0.895 0.010 80);
+  --input:   oklch(0.895 0.010 80);
+  --ring:    oklch(0.510 0.130 35 / 0.45);
+
+  /* charts — harmonised warm tones */
+  --chart-1: oklch(0.540 0.070 140);   /* sage (income) */
+  --chart-2: oklch(0.520 0.150 25);    /* brick (expense) */
+  --chart-3: oklch(0.650 0.120 70);    /* amber */
+  --chart-4: oklch(0.520 0.080 220);   /* info blue */
+  --chart-5: oklch(0.420 0.010 60);    /* ink-soft */
+
+  --radius: 0.625rem;
+
+  /* sidebar */
+  --sidebar:                       oklch(0.965 0.010 85);
+  --sidebar-foreground:            oklch(0.185 0.010 60);
+  --sidebar-primary:               oklch(0.510 0.130 35);
+  --sidebar-primary-foreground:    oklch(0.985 0.004 85);
+  --sidebar-accent:                oklch(0.940 0.014 80);
+  --sidebar-accent-foreground:     oklch(0.185 0.010 60);
+  --sidebar-border:                oklch(0.895 0.010 80);
+  --sidebar-ring:                  oklch(0.510 0.130 35 / 0.45);
+}
+
+/* ──────────────────────────────────────────────────────────
+ * TULI · DARK
+ * Warm-ink background, paper-tone foreground, brighter brick.
+ * ────────────────────────────────────────────────────────── */
+.dark {
+  --background:          oklch(0.180 0.008 60);
+  --foreground:          oklch(0.965 0.006 85);
+  --card:                oklch(0.225 0.010 60);
+  --card-foreground:     oklch(0.965 0.006 85);
+  --popover:             oklch(0.225 0.010 60);
+  --popover-foreground:  oklch(0.965 0.006 85);
+
+  --primary:             oklch(0.700 0.120 40);
+  --primary-foreground:  oklch(0.180 0.008 60);
+
+  --secondary:             oklch(0.260 0.010 60);
+  --secondary-foreground:  oklch(0.965 0.006 85);
+  --muted:                 oklch(0.260 0.010 60);
+  --muted-foreground:      oklch(0.720 0.008 80);
+  --accent:                oklch(0.295 0.012 60);
+  --accent-foreground:     oklch(0.965 0.006 85);
+
+  --destructive:           oklch(0.680 0.140 25);
+  --positive:              oklch(0.700 0.080 140);
+  --positive-foreground:   oklch(0.180 0.008 60);
+  --warn:                  oklch(0.760 0.110 70);
+  --warn-foreground:       oklch(0.180 0.008 60);
+  --info:                  oklch(0.700 0.080 220);
+  --info-foreground:       oklch(0.180 0.008 60);
+
+  --border:  oklch(1 0 0 / 10%);
+  --input:   oklch(1 0 0 / 15%);
+  --ring:    oklch(0.700 0.120 40 / 0.55);
+
+  --chart-1: oklch(0.700 0.080 140);
+  --chart-2: oklch(0.680 0.140 25);
+  --chart-3: oklch(0.760 0.110 70);
+  --chart-4: oklch(0.700 0.080 220);
+  --chart-5: oklch(0.820 0.008 80);
+
+  --sidebar:                       oklch(0.225 0.010 60);
+  --sidebar-foreground:            oklch(0.965 0.006 85);
+  --sidebar-primary:               oklch(0.700 0.120 40);
+  --sidebar-primary-foreground:    oklch(0.180 0.008 60);
+  --sidebar-accent:                oklch(0.295 0.012 60);
+  --sidebar-accent-foreground:     oklch(0.965 0.006 85);
+  --sidebar-border:                oklch(1 0 0 / 10%);
+  --sidebar-ring:                  oklch(0.700 0.120 40 / 0.55);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+    /* numbers line up in tables, reports, IBAN fields */
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  /* Tabular numerics anywhere we're showing money/codes */
+  .tabular, .font-mono, table, td, th, [data-tabular] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Utility: mono micro-label (section kickers, stat-card labels) */
+  .text-kicker {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 0.6875rem;    /* 11px */
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+}

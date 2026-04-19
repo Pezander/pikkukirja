@@ -1,0 +1,376 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ─── Users & Auth ────────────────────────────────────────────────────────────
+
+model User {
+  id               String    @id @default(cuid())
+  name             String
+  email            String    @unique
+  passwordHash     String
+  role             String    @default("user") // "admin" | "user"
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  totpSecret       String?
+  totpEnabled      Boolean   @default(false)
+  backupCodes      String    @default("[]") // JSON array of SHA-256 hashed one-time codes
+
+  accesses         AssociationAccess[]
+}
+
+// ─── Audit Log ───────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  timestamp  DateTime @default(now())
+  userId     String
+  userName   String
+  action     String   // "CREATE" | "UPDATE" | "DELETE"
+  entityType String   // "Voucher" | "Invoice" | "Member" | "FiscalYear" | "User"
+  entityId   String
+  description String
+}
+
+model AssociationAccess {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  associationId String
+  association   Association @relation(fields: [associationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, associationId])
+}
+
+// ─── Associations ────────────────────────────────────────────────────────────
+
+model Association {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   @default("tiekunta") // "tiekunta" | "metsastysseura" | "taloyhtio" | "toiminimi"
+  address     String   @default("")
+  postalCode  String   @default("")
+  city        String   @default("")
+  iban        String   @default("")
+  bic         String   @default("")
+  bankName    String   @default("")
+  contactName String   @default("")
+  phone       String   @default("")
+  email       String   @default("")
+  vatRate     Float?   // ALV-prosentti (esim. 25.5), vain toiminimi
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  fiscalYears       FiscalYear[]
+  members           Member[]
+  accounts          Account[]
+  accesses          AssociationAccess[]
+  voucherTemplates  VoucherTemplate[]
+  attachments       VoucherAttachment[]
+  bankStatements    BankStatement[]
+}
+
+// ─── Fiscal Years ────────────────────────────────────────────────────────────
+
+model FiscalYear {
+  id            String   @id @default(cuid())
+  year          Int
+  status        String   @default("open") // "open" | "closed"
+  createdAt     DateTime @default(now())
+
+  // Toimintakertomus sections (stored as JSON text)
+  reportSections String @default("[]")
+
+  // Liitetiedot sections (stored as JSON text: [{ id, title, body, locked? }])
+  liitetiedot    String @default("[]")
+
+  associationId String
+  association   Association @relation(fields: [associationId], references: [id])
+
+  vouchers      Voucher[]
+  invoices      Invoice[]
+  budgetLines   BudgetLine[]
+  meetings      Meeting[]
+  vatPeriods    VatPeriod[]
+
+  @@unique([associationId, year])
+}
+
+// ─── Chart of Accounts ───────────────────────────────────────────────────────
+
+model Account {
+  id            String  @id @default(cuid())
+  number        String  // e.g. "100"
+  name          String  // e.g. "Pankkitili"
+  type          String  // "asset" | "liability" | "equity" | "income" | "expense"
+  isSystem      Boolean @default(false) // pre-loaded standard accounts
+
+  associationId String
+  association   Association @relation(fields: [associationId], references: [id])
+
+  voucherLines   VoucherLine[]
+  budgetLines    BudgetLine[]
+  templateLines  VoucherTemplateLine[]
+
+  @@unique([associationId, number])
+}
+
+// ─── Vouchers (Tositteet / Päiväkirja) ───────────────────────────────────────
+
+model Voucher {
+  id          String   @id @default(cuid())
+  number      Int      // sequential per fiscal year
+  date        DateTime
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  fiscalYearId String
+  fiscalYear   FiscalYear @relation(fields: [fiscalYearId], references: [id])
+
+  lines            VoucherLine[]
+  attachments      VoucherAttachment[]
+  bankTransactions BankTransaction[]
+
+  @@unique([fiscalYearId, number])
+}
+
+model VoucherAttachment {
+  id            String   @id @default(cuid())
+  originalName  String
+  mimeType      String
+  size          Int
+  note          String   @default("")
+  createdAt     DateTime @default(now())
+
+  voucherId     String?
+  voucher       Voucher?     @relation(fields: [voucherId], references: [id], onDelete: SetNull)
+
+  associationId String
+  association   Association  @relation(fields: [associationId], references: [id], onDelete: Cascade)
+}
+
+model VoucherLine {
+  id        String  @id @default(cuid())
+  debit     Float   @default(0)
+  credit    Float   @default(0)
+  note      String  @default("")
+  vatAmount Float   @default(0)
+  vatRate   Float   @default(0)
+
+  voucherId String
+  voucher   Voucher @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id])
+}
+
+// ─── Members & Properties ────────────────────────────────────────────────────
+
+model Member {
+  id              String  @id @default(cuid())
+  name            String
+  address         String  @default("")
+  postalCode      String  @default("")
+  city            String  @default("")
+  email           String  @default("")
+  memberNumber    String  @default("") // external registry number, e.g. RHY jäsennumero
+  referenceNumber String  @default("") // viitenumero for bank payments
+  memberType      String  @default("") // for metsastysseura: "varsinainen" | "koejäsen" | "nuori" | etc.
+  notes           String  @default("")
+
+  associationId String
+  association   Association @relation(fields: [associationId], references: [id])
+
+  properties  Property[]
+  invoices    Invoice[]
+}
+
+model Property {
+  id    String @id @default(cuid())
+  name  String // tilan nimi
+  units Float  // yksiköt
+
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+// ─── Invoices (Laskut) ───────────────────────────────────────────────────────
+
+model Invoice {
+  id           String   @id @default(cuid())
+  invoiceNumber String  @default("")
+  issueDate    DateTime
+  dueDate      DateTime
+  unitPrice    Float    // €/unit
+  adminFee     Float    @default(10.0) // hallinnointimaksu
+  totalAmount  Float
+  vatRate      Float?   // ALV-prosentti jos käytössä
+  vatAmount    Float?   // ALV-osuus euroissa
+  paidAt       DateTime? // set when sum of payments >= totalAmount
+  paidAmount   Float?    // running sum of all payments (kept in sync)
+  sentAt       DateTime? // when last emailed to member
+  notes        String   @default("")
+  createdAt    DateTime @default(now())
+
+  memberId     String
+  member       Member @relation(fields: [memberId], references: [id])
+
+  fiscalYearId String
+  fiscalYear   FiscalYear @relation(fields: [fiscalYearId], references: [id])
+
+  // Snapshot of properties at time of invoice generation
+  lineItems    InvoiceLineItem[]
+  payments     Payment[]
+}
+
+// ─── Payments (Osamaksut) ─────────────────────────────────────────────────────
+
+model Payment {
+  id        String   @id @default(cuid())
+  amount    Float
+  paidAt    DateTime
+  note      String   @default("")
+  createdAt DateTime @default(now())
+
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+// ─── Budget (Budjetti) ────────────────────────────────────────────────────────
+
+model BudgetLine {
+  id           String     @id @default(cuid())
+  amount       Float      @default(0)
+
+  accountId    String
+  account      Account    @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  fiscalYearId String
+  fiscalYear   FiscalYear @relation(fields: [fiscalYearId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, fiscalYearId])
+}
+
+model InvoiceLineItem {
+  id         String @id @default(cuid())
+  name       String // property name
+  units      Float
+  unitPrice  Float
+  amount     Float  // units × unitPrice
+
+  invoiceId  String
+  invoice    Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+// ─── Voucher Templates (Tositemallipohjat) ────────────────────────────────────
+
+model VoucherTemplate {
+  id            String   @id @default(cuid())
+  name          String
+  description   String   @default("")
+  recurrence    String   @default("none") // "none" | "monthly" | "quarterly" | "yearly"
+  dayOfMonth    Int      @default(1)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  associationId String
+  association   Association @relation(fields: [associationId], references: [id], onDelete: Cascade)
+
+  lines         VoucherTemplateLine[]
+}
+
+model VoucherTemplateLine {
+  id         String  @id @default(cuid())
+  debit      Float   @default(0)
+  credit     Float   @default(0)
+  note       String  @default("")
+
+  accountId  String
+  account    Account @relation(fields: [accountId], references: [id])
+
+  templateId String
+  template   VoucherTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+}
+
+// ─── Meetings & Decisions (Kokoukset ja päätökset) ───────────────────────────
+
+model Meeting {
+  id           String   @id @default(cuid())
+  meetingType  String   // "vuosikokous" | "hallitus" | "ylimääräinen"
+  meetingDate  DateTime
+  location     String   @default("")
+  attendees    String   @default("")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  fiscalYearId String
+  fiscalYear   FiscalYear @relation(fields: [fiscalYearId], references: [id], onDelete: Cascade)
+
+  decisions    Decision[]
+}
+
+model Decision {
+  id        String   @id @default(cuid())
+  number    Int
+  title     String
+  body      String   @default("")
+  outcome   String   @default("passed") // "passed" | "rejected" | "deferred"
+  createdAt DateTime @default(now())
+
+  meetingId String
+  meeting   Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+}
+
+// ─── VAT Periods (ALV-ilmoitusjaksot) ────────────────────────────────────────
+
+model VatPeriod {
+  id            String    @id @default(cuid())
+  periodStart   DateTime
+  periodEnd     DateTime
+  periodType    String    @default("quarter") // "month" | "quarter"
+  status        String    @default("open")    // "open" | "submitted"
+  submittedAt   DateTime?
+  vatCollected  Float     @default(0)  // output VAT (myyntiALV)
+  vatDeductible Float     @default(0)  // input VAT (ostoALV)
+  vatPayable    Float     @default(0)  // net payable
+
+  fiscalYearId  String
+  fiscalYear    FiscalYear @relation(fields: [fiscalYearId], references: [id], onDelete: Cascade)
+}
+
+// ─── Bank Statements (Tiliotteet) ─────────────────────────────────────────────
+
+model BankStatement {
+  id            String   @id @default(cuid())
+  importedAt    DateTime @default(now())
+  filename      String
+  format        String   @default("csv") // "csv" | "camt053"
+
+  associationId String
+  association   Association @relation(fields: [associationId], references: [id], onDelete: Cascade)
+
+  transactions  BankTransaction[]
+}
+
+model BankTransaction {
+  id          String   @id @default(cuid())
+  date        DateTime
+  amount      Float
+  description String   @default("")
+  reference   String   @default("")
+  archiveId   String   @default("")
+
+  voucherId   String?
+  voucher     Voucher? @relation(fields: [voucherId], references: [id], onDelete: SetNull)
+
+  statementId String
+  statement   BankStatement @relation(fields: [statementId], references: [id], onDelete: Cascade)
+}
