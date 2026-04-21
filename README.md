@@ -2,6 +2,8 @@
   <img src="public/logo.png" alt="Pikkukirja" width="160" />
 </p>
 
+<p align="center"><a href="README.en.md">🇬🇧 In English</a></p>
+
 <h1 align="center">Pikkukirja</h1>
 
 <p align="center">
@@ -15,6 +17,10 @@
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License" />
   <img src="https://img.shields.io/badge/node-%3E%3D22-brightgreen?logo=node.js" alt="Node >= 22" />
 </p>
+
+---
+
+![Yleiskatsaus](screenshots/yleiskatsaus.png)
 
 ---
 
@@ -63,6 +69,8 @@ Jokaisella organisaatiotyypillä on oma tilikartta, omat tilit laskuille ja rapo
 
 ### Kirjanpito
 
+![Tositekirjaus](screenshots/tositekirjaus.png)
+
 - Kahdenkertainen kirjanpito tositteilla
 - **Tositteen kopiointi** — kopioi olemassa olevan tositteen pohjana uudelle
 - **Liitteet** — kuitti tai asiakirja (PDF, JPEG, PNG, GIF, WebP, max 10 MB) tositteeseen; paperilippu-kuvake päiväkirjassa
@@ -95,6 +103,8 @@ Jokaisella organisaatiotyypillä on oma tilikartta, omat tilit laskuille ja rapo
 - Jäsentä, jolla on laskuja, ei voi vahingossa poistaa
 
 ### Laskutus
+
+![Jäsenlaskutus](screenshots/jäsenlaskutus.png)
 
 - PDF-laskujen generointi kaikille jäsenille kerralla
 - **Tiekunta / taloyhtiö** — hinta × yksiköt + hallinnointimaksu
