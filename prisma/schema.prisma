@@ -68,13 +68,14 @@ model Association {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  fiscalYears       FiscalYear[]
-  members           Member[]
-  accounts          Account[]
-  accesses          AssociationAccess[]
-  voucherTemplates  VoucherTemplate[]
-  attachments       VoucherAttachment[]
-  bankStatements    BankStatement[]
+  fiscalYears           FiscalYear[]
+  members               Member[]
+  accounts              Account[]
+  accesses              AssociationAccess[]
+  voucherTemplates      VoucherTemplate[]
+  attachments           VoucherAttachment[]
+  bankStatements        BankStatement[]
+  roadUnitCalculations  RoadUnitCalculation[]
 }
 
 // ─── Fiscal Years ────────────────────────────────────────────────────────────
@@ -189,8 +190,10 @@ model Member {
   associationId String
   association   Association @relation(fields: [associationId], references: [id])
 
-  properties  Property[]
-  invoices    Invoice[]
+  properties        Property[]
+  invoices          Invoice[]
+  roadProperties    RoadEstateProperty[]
+  roadUnitResults   RoadUnitResult[]
 }
 
 model Property {
@@ -373,4 +376,91 @@ model BankTransaction {
 
   statementId String
   statement   BankStatement @relation(fields: [statementId], references: [id], onDelete: Cascade)
+}
+
+// ─── Road Unit Calculation / Tieyksiköinti ───────────────────────────────────
+
+// A kiinteistö (property parcel) owned by a tiekunta member.
+// Persistent data — updated when ownership or land area changes.
+model RoadEstateProperty {
+  id           String @id @default(cuid())
+  kiinteistoId String @default("") // kiinteistötunnus, e.g. "123-456-7-89"
+  name         String               // tilan nimi
+  distanceKm   Float                // yhdensuuntainen matka yksityistiellä (km)
+  notes        String @default("")
+
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  allocations TrafficAllocation[]
+}
+
+// One record per liikennelaji per kiinteistö.
+// trafficType: "asunto" | "vapaa_ajan_asunto" | "metsa" | "pelto" | "muu"
+//
+// subType by trafficType:
+//   vapaa_ajan_asunto → "ympärivuotinen" | "kesämökki" | "lomamökki"
+//   metsa             → "1" | "2" | "3" | "4" | "5"  (forest region)
+//   pelto             → "kasvinviljely" | "nautakarja"
+//   asunto / muu      → ""
+//
+// cropCorrection (pelto only):
+//   "none" | "sika_siipikarja" (+40 %) | "sokerijuurikas" (+80 %) | "kesanto" (-70 %)
+model TrafficAllocation {
+  id               String @id @default(cuid())
+  trafficType      String
+  subType          String @default("")
+  areaHa           Float  @default(0)   // metsa and pelto only
+  correctionFactor Float  @default(1.0) // korjauskerroin, applied to final painoluku
+  cropCorrection   String @default("none")
+
+  // Muu liikenne: painoluku = muuTripsPerYear * muuVehicleWeightT + muuCargoWeightT
+  muuTripsPerYear  Int   @default(0)
+  muuVehicleWeightT Float @default(0)
+  muuCargoWeightT   Float @default(0)
+
+  notes String @default("")
+
+  roadPropertyId String
+  roadProperty   RoadEstateProperty @relation(fields: [roadPropertyId], references: [id], onDelete: Cascade)
+}
+
+// A versioned calculation snapshot (tieyksikkölaskelma).
+// Running a new calculation reads the current RoadEstateProperty / TrafficAllocation
+// state and stores results. Only one calculation should be isActive at a time.
+model RoadUnitCalculation {
+  id           String   @id @default(cuid())
+  name         String   // e.g. "Tieyksikkölaskelma 2024"
+  isActive     Boolean  @default(false)
+  pricePerUnit Float    @default(0) // €/tkm — default for invoice generation
+  adminFee     Float    @default(0) // perusmaksu per member (€)
+  notes        String   @default("")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  associationId String
+  association   Association @relation(fields: [associationId], references: [id], onDelete: Cascade)
+
+  results RoadUnitResult[]
+}
+
+// Calculated result per member for one RoadUnitCalculation.
+// breakdown is a JSON array snapshot so the PDF report can show the full detail
+// even after properties are later edited.
+//
+// breakdown item shape:
+//   { propertyName, kiinteistoId, distanceKm,
+//     trafficType, subType, areaHa, painoluku, correctionFactor, tkm }
+model RoadUnitResult {
+  id           String @id @default(cuid())
+  memberName   String // name snapshot at calculation time
+  totalTkm     Float  // total ton-kilometres for this member
+  sharePercent Float  // this member's % of association total tkm
+  breakdown    String @default("[]") // JSON — see shape above
+
+  calculationId String
+  calculation   RoadUnitCalculation @relation(fields: [calculationId], references: [id], onDelete: Cascade)
+
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id])
 }

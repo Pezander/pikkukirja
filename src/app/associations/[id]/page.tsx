@@ -17,6 +17,7 @@ import {
   LayoutTemplate,
   Archive,
   Landmark,
+  Route,
 } from "lucide-react";
 import { getOrgLabels } from "@/lib/orgLabels";
 
@@ -407,6 +408,18 @@ export default function AssociationPage() {
                 </CardHeader>
               </Card>
             </Link>
+
+            {association.type === "tiekunta" && (
+              <Link href={`/associations/${id}/tieyksikointi`}>
+                <Card className="hover:border-primary/50 transition-all cursor-pointer h-full">
+                  <CardHeader>
+                    <Route className="h-6 w-6 text-primary mb-2" />
+                    <CardTitle className="text-base">Tieyksiköinti</CardTitle>
+                    <CardDescription>Laske tieyksikköt ja maksuosuudet</CardDescription>
+                  </CardHeader>
+                </Card>
+              </Link>
+            )}
           </div>
         </section>
       </div>
