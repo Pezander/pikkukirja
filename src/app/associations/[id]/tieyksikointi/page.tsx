@@ -101,6 +101,11 @@ function fmt2(n: number) {
   return n.toFixed(2).replace(".", ",");
 }
 
+function fmtPrice(n: number) {
+  // Show enough decimals so e.g. 0.055 doesn't round to 0.06
+  return n.toLocaleString("fi-FI", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+}
+
 // ─── Empty form defaults ──────────────────────────────────────────────────────
 
 const EMPTY_PROP = { kiinteistoId: "", name: "", distanceKm: "", notes: "" };
@@ -616,10 +621,10 @@ export default function TieyksiköintiPage() {
                               {(detail.pricePerUnit > 0 || detail.adminFee > 0) && (
                                 <div className="px-4 py-2 border-b bg-muted/10 flex gap-6 text-xs text-muted-foreground">
                                   {detail.pricePerUnit > 0 && (
-                                    <span>Yksikköhinta: <strong className="text-foreground">{fmt2(detail.pricePerUnit)} €/tkm</strong></span>
+                                    <span>Yksikköhinta: <strong className="text-foreground">{fmtPrice(detail.pricePerUnit)} €/tkm</strong></span>
                                   )}
                                   {detail.adminFee > 0 && (
-                                    <span>Perusmaksu: <strong className="text-foreground">{fmt2(detail.adminFee)} €/jäsen</strong></span>
+                                    <span>Perusmaksu: <strong className="text-foreground">{fmtPrice(detail.adminFee)} €/jäsen</strong></span>
                                   )}
                                 </div>
                               )}
