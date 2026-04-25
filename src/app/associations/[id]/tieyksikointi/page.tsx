@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowLeft, Plus, Pencil, Trash2, Route, ChevronDown, ChevronRight,
-  Play, CheckCircle2,
+  Play, CheckCircle2, Download,
 } from "lucide-react";
 
 // ─── Domain types ─────────────────────────────────────────────────────────────
@@ -599,6 +599,18 @@ export default function TieyksiköintiPage() {
                               Aseta aktiiviseksi
                             </Button>
                           )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => window.open(
+                              `/api/associations/${id}/road-units/calculations/${calc.id}/pdf`,
+                              "_blank"
+                            )}
+                          >
+                            <Download className="mr-1 h-3 w-3" />
+                            Lataa PDF
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"
