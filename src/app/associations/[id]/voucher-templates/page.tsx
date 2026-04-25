@@ -59,14 +59,11 @@ export default function VoucherTemplatesPage() {
     load();
   }
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Ladataan...</div>;
+  if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground">Ladataan...</div>;
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <Link href={`/associations/${id}`} className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6">
-          <ArrowLeft className="mr-1 h-4 w-4" />{assocName}
-        </Link>
 
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -142,6 +139,6 @@ export default function VoucherTemplatesPage() {
         editing={editing}
         onSaved={() => { load(); setDialogOpen(false); }}
       />
-    </div>
+    </>
   );
 }

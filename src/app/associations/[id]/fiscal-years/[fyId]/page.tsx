@@ -167,24 +167,17 @@ export default function FiscalYearPage() {
   }
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Ladataan...</div>;
+    return <div className="flex items-center justify-center py-20 text-muted-foreground">Ladataan...</div>;
   }
   if (!fy) {
-    return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Tilikautta ei löydy.</div>;
+    return <div className="flex items-center justify-center py-20 text-muted-foreground">Tilikautta ei löydy.</div>;
   }
 
   const isOpen = fy.status === "open";
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <Link
-          href={`/associations/${id}`}
-          className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6"
-        >
-          <ArrowLeft className="mr-1 h-4 w-4" />
-          {fy.association.name}
-        </Link>
 
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -399,6 +392,6 @@ export default function FiscalYearPage() {
         orgType={fy.association.type}
         onSaved={() => { load(); setVoucherOpen(false); }}
       />
-    </div>
+    </>
   );
 }

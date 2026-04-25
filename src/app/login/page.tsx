@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { PikkukirjaLogo } from "@/components/PikkukirjaLogo";
 
 function LoginForm() {
   const router = useRouter();
@@ -210,7 +209,8 @@ export default function LoginPage() {
         {/* Logo block */}
         <div className="text-center mb-5">
           <div className="flex justify-center mb-2.5">
-            <PikkukirjaLogo size={42} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="Pikkukirja" className="h-16 w-auto" />
           </div>
           <p className="text-[19px] font-bold tracking-tight mt-2.5">Pikkukirja</p>
           <p className="text-[12.5px] text-muted-foreground">

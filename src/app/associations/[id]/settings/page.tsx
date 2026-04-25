@@ -163,7 +163,7 @@ export default function SettingsPage() {
   }
 
   if (!assoc) {
-    return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Ladataan...</div>;
+    return <div className="flex items-center justify-center py-20 text-muted-foreground">Ladataan...</div>;
   }
 
   const labels = getOrgLabels(assoc.type);
@@ -175,12 +175,8 @@ export default function SettingsPage() {
   })).filter((g) => g.accounts.length > 0);
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <div className="max-w-3xl mx-auto px-4 py-8">
-        <Link href={`/associations/${id}`} className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6">
-          <ArrowLeft className="mr-1 h-4 w-4" />
-          {assoc.name}
-        </Link>
 
         <div className="flex items-center gap-3 mb-8">
           <Settings className="h-6 w-6 text-primary" />
@@ -376,6 +372,6 @@ export default function SettingsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

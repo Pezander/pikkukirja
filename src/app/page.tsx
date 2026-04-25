@@ -49,6 +49,12 @@ export default function HomePage() {
 
       <div className="flex-1 py-11 px-8">
         <div className="mx-auto" style={{ maxWidth: 680 }}>
+          {/* Logo */}
+          <div className="flex justify-center mb-8">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="Pikkukirja" className="h-20 w-auto" />
+          </div>
+
           {/* Page header */}
           <div className="mb-6">
             <p className="font-mono text-[10px] font-medium tracking-[0.9px] uppercase text-muted-foreground mb-1">

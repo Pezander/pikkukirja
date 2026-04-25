@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +19,6 @@ import {
   Route,
 } from "lucide-react";
 import { getOrgLabels } from "@/lib/orgLabels";
-import { TopBar } from "@/components/TopBar";
 
 interface FiscalYear {
   id: string;
@@ -90,13 +88,11 @@ function formatEur(n: number) {
 
 export default function AssociationPage() {
   const { id } = useParams<{ id: string }>();
-  const { data: session } = useSession();
   const [association, setAssociation] = useState<Association | null>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [creatingYear, setCreatingYear] = useState(false);
-  const isAdmin = (session?.user as { role?: string })?.role === "admin";
 
   useEffect(() => {
     Promise.all([
@@ -139,39 +135,19 @@ export default function AssociationPage() {
   }
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Ladataan...</div>;
+    return <div className="flex items-center justify-center py-20 text-muted-foreground">Ladataan...</div>;
   }
 
   if (!association) {
-    return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Organisaatiota ei löydy.</div>;
+    return <div className="flex items-center justify-center py-20 text-muted-foreground">Organisaatiota ei löydy.</div>;
   }
 
   const labels = getOrgLabels(association.type);
   const openYear = association.fiscalYears.find((y) => y.status === "open");
 
-  const navItems = [
-    { label: "Yleiskatsaus", href: `/associations/${id}` },
-    ...(openYear
-      ? [
-          { label: "Kirjanpito", href: `/associations/${id}/fiscal-years/${openYear.id}` },
-          { label: "Laskut", href: `/associations/${id}/fiscal-years/${openYear.id}/invoices` },
-        ]
-      : []),
-    { label: "Jäsenet", href: `/associations/${id}/members` },
-    { label: "Tiliotteet", href: `/associations/${id}/bank-statements` },
-  ];
-
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <TopBar
-        email={session?.user?.email}
-        name={session?.user?.name}
-        isAdmin={isAdmin}
-        navItems={navItems}
-      />
-
-      <div className="flex-1 p-[24px_30px]">
-        <div className="max-w-5xl mx-auto">
+    <div className="p-[24px_30px]">
+      <div className="max-w-5xl mx-auto">
           {/* Page title block */}
           <div className="flex items-start justify-between mb-5">
             <div>
@@ -447,7 +423,6 @@ export default function AssociationPage() {
             )}
           </div>
         </section>
-        </div>
       </div>
     </div>
   );
