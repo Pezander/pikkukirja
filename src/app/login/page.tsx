@@ -6,7 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { PikkukirjaLogo } from "@/components/PikkukirjaLogo";
 
 function LoginForm() {
   const router = useRouter();
@@ -73,6 +74,8 @@ function LoginForm() {
     setResetLoading(false);
   }
 
+  const inputClass = "h-[35px] border border-input bg-muted rounded-[calc(var(--radius)-2px)] px-3 font-mono text-[13px]";
+
   if (showReset) {
     return (
       <div className="space-y-4">
@@ -81,7 +84,11 @@ function LoginForm() {
             <p className="text-sm text-muted-foreground">
               Jos sähköpostiosoitteella on tili, salasanan palautuslinkki on lähetetty.
             </p>
-            <Button variant="outline" className="w-full" onClick={() => { setShowReset(false); setResetSent(false); setResetEmail(""); }}>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => { setShowReset(false); setResetSent(false); setResetEmail(""); }}
+            >
               Takaisin kirjautumiseen
             </Button>
           </>
@@ -99,6 +106,7 @@ function LoginForm() {
                 value={resetEmail}
                 onChange={(e) => setResetEmail(e.target.value)}
                 required
+                className={inputClass}
               />
             </div>
             <Button type="submit" className="w-full" disabled={resetLoading}>
@@ -136,15 +144,16 @@ function LoginForm() {
             onChange={(e) => setTotpCode(e.target.value)}
             autoFocus
             required
+            className={inputClass}
           />
         </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
-        <Button type="submit" className="w-full" disabled={loading}>
+        <Button type="submit" className="w-full mt-1.5" disabled={loading}>
           {loading ? "Tarkistetaan..." : "Vahvista"}
         </Button>
         <button
           type="button"
-          className="w-full text-sm text-muted-foreground hover:text-foreground"
+          className="w-full text-center text-xs text-muted-foreground mt-3 hover:text-foreground"
           onClick={() => { setStep("password"); setTotpCode(""); setError(""); }}
         >
           Takaisin
@@ -164,6 +173,7 @@ function LoginForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          className={inputClass}
         />
       </div>
       <div className="space-y-1.5">
@@ -175,15 +185,16 @@ function LoginForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          className={inputClass}
         />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" className="w-full" disabled={loading}>
+      <Button type="submit" className="w-full mt-1.5" disabled={loading}>
         {loading ? "Kirjaudutaan..." : "Kirjaudu sisään"}
       </Button>
       <button
         type="button"
-        className="w-full text-sm text-muted-foreground hover:text-foreground"
+        className="w-full text-center text-xs text-muted-foreground mt-3 hover:text-foreground"
         onClick={() => setShowReset(true)}
       >
         Unohditko salasanan?
@@ -195,17 +206,26 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-          <CardTitle className="text-xl">Kirjanpito</CardTitle>
-          <CardDescription>Kirjaudu sisään jatkaaksesi</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Suspense>
-            <LoginForm />
-          </Suspense>
-        </CardContent>
-      </Card>
+      <div className="w-full" style={{ maxWidth: 320 }}>
+        {/* Logo block */}
+        <div className="text-center mb-5">
+          <div className="flex justify-center mb-2.5">
+            <PikkukirjaLogo size={42} />
+          </div>
+          <p className="text-[19px] font-bold tracking-tight mt-2.5">Pikkukirja</p>
+          <p className="text-[12.5px] text-muted-foreground">
+            Kirjanpito-ohjelma pienille yhdistyksille
+          </p>
+        </div>
+
+        <Card>
+          <CardContent className="p-[20px_22px]">
+            <Suspense>
+              <LoginForm />
+            </Suspense>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

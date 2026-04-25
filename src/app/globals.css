@@ -58,6 +58,7 @@
   /* New semantic tokens (optional — safe to use where it helps) */
   --color-positive: var(--positive);
   --color-positive-foreground: var(--positive-foreground);
+  --color-negative: var(--negative);
   --color-warn: var(--warn);
   --color-warn-foreground: var(--warn-foreground);
   --color-info: var(--info);
@@ -99,6 +100,7 @@
 
   /* status */
   --destructive:           oklch(0.520 0.150 25);
+  --negative:              oklch(0.510 0.155 22);    /* alias for destructive/expense */
   --positive:              oklch(0.540 0.070 140);   /* sage */
   --positive-foreground:   oklch(0.985 0.004 85);
   --warn:                  oklch(0.650 0.120 70);    /* amber */
@@ -110,6 +112,9 @@
   --border:  oklch(0.895 0.010 80);
   --input:   oklch(0.895 0.010 80);
   --ring:    oklch(0.510 0.130 35 / 0.45);
+
+  /* card shadow */
+  --card-shadow: 0 1px 3px oklch(0.45 0.06 55 / 0.09), 0 6px 20px oklch(0.45 0.06 55 / 0.07);
 
   /* charts — harmonised warm tones */
   --chart-1: oklch(0.540 0.070 140);   /* sage (income) */
@@ -154,6 +159,7 @@
   --accent-foreground:     oklch(0.965 0.006 85);
 
   --destructive:           oklch(0.680 0.140 25);
+  --negative:              oklch(0.690 0.145 22);
   --positive:              oklch(0.700 0.080 140);
   --positive-foreground:   oklch(0.180 0.008 60);
   --warn:                  oklch(0.760 0.110 70);
@@ -164,6 +170,9 @@
   --border:  oklch(1 0 0 / 10%);
   --input:   oklch(1 0 0 / 15%);
   --ring:    oklch(0.700 0.120 40 / 0.55);
+
+  /* card shadow */
+  --card-shadow: 0 2px 6px oklch(0.12 0.008 60 / 0.45), 0 10px 30px oklch(0.12 0.008 60 / 0.35);
 
   --chart-1: oklch(0.700 0.080 140);
   --chart-2: oklch(0.680 0.140 25);

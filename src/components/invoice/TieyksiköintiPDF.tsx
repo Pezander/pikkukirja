@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   bColProp: { flex: 2.5 },
-  bColDist: { flex: 1, textAlign: "right" },
+  bColDist: { flex: 1, textAlign: "right", marginRight: 8 },
   bColType: { flex: 2 },
   bColPainoluku: { flex: 1, textAlign: "right" },
   bColCorr: { flex: 1, textAlign: "right" },
@@ -242,7 +242,7 @@ export function TieyksiköintiPDF({
                 {b.propertyName}
                 {b.kiinteistoId ? `\n${b.kiinteistoId}` : ""}
               </Text>
-              <Text style={styles.bColDist}>{fi2(b.distanceKm)}</Text>
+              <Text style={styles.bColDist}>{fi2(b.distanceKm)} km</Text>
               <Text style={styles.bColType}>{trafficLabel(b.trafficType, b.subType)}</Text>
               <Text style={styles.bColPainoluku}>{fi2(b.painoluku)}</Text>
               <Text style={styles.bColCorr}>{fi2(b.correctionFactor)}</Text>

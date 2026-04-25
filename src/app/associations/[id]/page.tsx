@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  ArrowLeft,
   BookOpen,
   Users,
   FileText,
@@ -20,6 +20,7 @@ import {
   Route,
 } from "lucide-react";
 import { getOrgLabels } from "@/lib/orgLabels";
+import { TopBar } from "@/components/TopBar";
 
 interface FiscalYear {
   id: string;
@@ -89,11 +90,13 @@ function formatEur(n: number) {
 
 export default function AssociationPage() {
   const { id } = useParams<{ id: string }>();
+  const { data: session } = useSession();
   const [association, setAssociation] = useState<Association | null>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [creatingYear, setCreatingYear] = useState(false);
+  const isAdmin = (session?.user as { role?: string })?.role === "admin";
 
   useEffect(() => {
     Promise.all([
@@ -146,32 +149,54 @@ export default function AssociationPage() {
   const labels = getOrgLabels(association.type);
   const openYear = association.fiscalYears.find((y) => y.status === "open");
 
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto px-4 py-10">
-        {/* Back + header */}
-        <Link href="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6">
-          <ArrowLeft className="mr-1 h-4 w-4" />
-          Kaikki organisaatiot
-        </Link>
+  const navItems = [
+    { label: "Yleiskatsaus", href: `/associations/${id}` },
+    ...(openYear
+      ? [
+          { label: "Kirjanpito", href: `/associations/${id}/fiscal-years/${openYear.id}` },
+          { label: "Laskut", href: `/associations/${id}/fiscal-years/${openYear.id}/invoices` },
+        ]
+      : []),
+    { label: "Jäsenet", href: `/associations/${id}/members` },
+    { label: "Tiliotteet", href: `/associations/${id}/bank-statements` },
+  ];
 
-        <div className="flex items-start justify-between mb-8">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <h1 className="text-2xl font-bold">{association.name}</h1>
-              <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-muted text-muted-foreground">
-                {labels.orgTypeName}
-              </span>
+  return (
+    <div className="min-h-screen flex flex-col bg-background">
+      <TopBar
+        email={session?.user?.email}
+        name={session?.user?.name}
+        isAdmin={isAdmin}
+        navItems={navItems}
+      />
+
+      <div className="flex-1 p-[24px_30px]">
+        <div className="max-w-5xl mx-auto">
+          {/* Page title block */}
+          <div className="flex items-start justify-between mb-5">
+            <div>
+              <p className="font-mono text-[10px] font-medium tracking-[0.9px] uppercase text-muted-foreground mb-1">
+                {labels.orgTypeName.toUpperCase()} · {association.city}
+              </p>
+              <h1 className="text-2xl font-bold tracking-[-0.025em]">{association.name}</h1>
             </div>
-            {association.city && <p className="text-muted-foreground">{association.city}</p>}
+            <div className="flex items-center gap-2">
+              <Link href={`/associations/${id}/settings`}>
+                <Button variant="outline" size="sm">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Asetukset
+                </Button>
+              </Link>
+              {openYear && (
+                <Link href={`/associations/${id}/fiscal-years/${openYear.id}`}>
+                  <Button size="sm">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Uusi tosite
+                  </Button>
+                </Link>
+              )}
+            </div>
           </div>
-          <Link href={`/associations/${id}/settings`}>
-            <Button variant="outline" size="sm">
-              <Settings className="mr-2 h-4 w-4" />
-              Asetukset
-            </Button>
-          </Link>
-        </div>
 
         {/* Stats */}
         {summary && (
@@ -422,6 +447,7 @@ export default function AssociationPage() {
             )}
           </div>
         </section>
+        </div>
       </div>
     </div>
   );
