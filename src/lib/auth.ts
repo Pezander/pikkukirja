@@ -50,7 +50,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        if (user.role === "admin" && user.totpEnabled) {
+        if (user.totpEnabled) {
           const code = (credentials.totpCode as string | undefined)?.trim();
           if (!code) throw new OtpRequiredError();
 
@@ -126,11 +126,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return token;
     },
-    session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string;
-        (session.user as unknown as { role: string }).role = token.role as string;
+    async session({ session, token }) {
+      if (!token) return session;
+      // Re-read role from DB so demotions/deletions take effect immediately,
+      // rather than waiting for the JWT to expire.
+      const dbUser = await prisma.user.findUnique({
+        where: { id: token.id as string },
+        select: { id: true, role: true },
+      });
+      if (!dbUser) {
+        // User was deleted — invalidate the session.
+        return { ...session, user: { ...session.user, id: "", role: "" } };
       }
+      session.user.id = dbUser.id;
+      (session.user as unknown as { role: string }).role = dbUser.role;
       return session;
     },
   },

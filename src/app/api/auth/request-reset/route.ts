@@ -1,10 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isSmtpConfigured, createTransport, SMTP_FROM } from "@/lib/smtp";
+import { escapeHtml } from "@/lib/utils";
 import { isRateLimited, recordFailure } from "@/lib/rate-limiter";
 import crypto from "crypto";
 
+function getClientIp(req: NextRequest): string {
+  const fwd = req.headers.get("x-forwarded-for");
+  if (fwd) return fwd.split(",")[0].trim();
+  const real = req.headers.get("x-real-ip");
+  if (real) return real.trim();
+  return "unknown";
+}
+
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req);
+
+  // Per-IP limit first — protects SMTP quota even if the attacker varies emails.
+  const ipRl = isRateLimited(`reset-ip:${ip}`);
+  if (ipRl.limited) {
+    return NextResponse.json({ ok: true }); // Silent — don't reveal the limit
+  }
+  recordFailure(`reset-ip:${ip}`);
+
   const { email } = await req.json();
 
   if (!email) {
@@ -57,9 +75,9 @@ export async function POST(req: NextRequest) {
     to: user.email,
     subject: "Salasanan palautus — Kirjanpito",
     html: `
-      <p>Hyvä ${user.name},</p>
+      <p>Hyvä ${escapeHtml(user.name)},</p>
       <p>olet pyytänyt salasanan palautusta. Käytä alla olevaa linkkiä asettaaksesi uuden salasanan:</p>
-      <p><a href="${resetUrl}" style="color:#2563eb">${resetUrl}</a></p>
+      <p><a href="${escapeHtml(resetUrl)}" style="color:#2563eb">${escapeHtml(resetUrl)}</a></p>
       <p>Linkki on voimassa 1 tunnin.</p>
       <p>Jos et pyytänyt salasanan palautusta, voit jättää tämän viestin huomiotta.</p>
       <p style="color:#555">Ystävällisin terveisin,<br>Kirjanpito-järjestelmä</p>

@@ -267,18 +267,39 @@ export default function InvoicesPage() {
 
     setGenerating(true);
 
-    const res = await fetch(`/api/associations/${id}/fiscal-years/${fyId}/invoices`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    const send = async (body: Record<string, unknown>) =>
+      fetch(`/api/associations/${id}/fiscal-years/${fyId}/invoices`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+    let res = await send(payload);
+
+    if (res.status === 409) {
+      const err = await res.json();
+      if (err.error === "INVOICES_HAVE_PAYMENTS") {
+        const proceed = confirm(
+          `VAROITUS: ${err.paidCount} laskua sisältää maksuja. Uudelleenluonti POISTAA maksuhistorian pysyvästi. Haluatko silti jatkaa?`
+        );
+        if (!proceed) {
+          setGenerating(false);
+          return;
+        }
+        res = await send({ ...payload, force: true });
+      } else {
+        setError(err.message ?? err.error ?? "Laskujen luonti epäonnistui.");
+        setGenerating(false);
+        return;
+      }
+    }
 
     if (res.ok) {
       await load();
       setGenerateOpen(false);
     } else {
-      const err = await res.json();
-      setError(err.error ?? "Laskujen luonti epäonnistui.");
+      const err = await res.json().catch(() => ({}));
+      setError(err.message ?? err.error ?? "Laskujen luonti epäonnistui.");
     }
     setGenerating(false);
   }

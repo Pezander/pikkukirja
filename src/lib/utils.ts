@@ -5,6 +5,16 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function escapeHtml(input: unknown): string {
+  if (input === null || input === undefined) return "";
+  return String(input)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 // Magic-byte signatures for allowed attachment types.
 // Returns the detected MIME type, or null if the bytes don't match any known type.
 export function detectMimeFromBytes(buf: Uint8Array): string | null {

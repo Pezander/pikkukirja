@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { readCronConfig } from "@/lib/cron-config";
 import { isSmtpConfigured, createTransport, SMTP_FROM } from "@/lib/smtp";
+import { escapeHtml } from "@/lib/utils";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { InvoicePDF } from "@/components/invoice/InvoicePDF";
 import React from "react";
@@ -67,13 +68,13 @@ export async function GET(req: NextRequest) {
           to: invoice.member.email,
           subject: `MUISTUTUS: Lasku ${invoice.invoiceNumber} – ${fy.association.name}`,
           html: `
-            <p>Hyvä ${invoice.member.name},</p>
-            <p>muistutus avoimesta laskusta <strong>${invoice.invoiceNumber}</strong> — <strong>${fy.association.name}</strong>.</p>
+            <p>Hyvä ${escapeHtml(invoice.member.name)},</p>
+            <p>muistutus avoimesta laskusta <strong>${escapeHtml(invoice.invoiceNumber)}</strong> — <strong>${escapeHtml(fy.association.name)}</strong>.</p>
             <table style="border-collapse:collapse;margin:12px 0">
               <tr><td style="padding:3px 12px 3px 0;color:#555">Eräpäivä</td><td><strong>${fmtDate(invoice.dueDate.toISOString())}</strong></td></tr>
               <tr><td style="padding:3px 12px 3px 0;color:#555">Summa</td><td><strong>${fmtEur(invoice.totalAmount)}</strong></td></tr>
-              <tr><td style="padding:3px 12px 3px 0;color:#555">Viitenumero</td><td><code>${invoice.member.referenceNumber}</code></td></tr>
-              ${fy.association.iban ? `<tr><td style="padding:3px 12px 3px 0;color:#555">IBAN</td><td>${fy.association.iban}</td></tr>` : ""}
+              <tr><td style="padding:3px 12px 3px 0;color:#555">Viitenumero</td><td><code>${escapeHtml(invoice.member.referenceNumber)}</code></td></tr>
+              ${fy.association.iban ? `<tr><td style="padding:3px 12px 3px 0;color:#555">IBAN</td><td>${escapeHtml(fy.association.iban)}</td></tr>` : ""}
             </table>
           `,
           attachments: [

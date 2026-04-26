@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { readReportScheduleConfig } from "@/lib/report-schedule-config";
 import { isSmtpConfigured, createTransport, SMTP_FROM } from "@/lib/smtp";
+import { escapeHtml } from "@/lib/utils";
 
 function fmtEur(n: number) {
   return n.toFixed(2).replace(".", ",") + " €";
@@ -23,7 +24,8 @@ const BUCKET_ORDER = ["Ei erääntynyt", "1–30 pv", "31–90 pv", "Yli 90 pv"]
 
 function buildInvoiceAgingHtml(assocName: string, invoices: { invoiceNumber: string; dueDate: Date; totalAmount: number; paidAmount: number | null; member: { name: string } }[]): string {
   const open = invoices.filter((i) => !i.paidAmount || i.paidAmount < i.totalAmount - 0.005);
-  if (open.length === 0) return `<p>Ei avoimia laskuja – ${assocName}</p>`;
+  const safeAssoc = escapeHtml(assocName);
+  if (open.length === 0) return `<p>Ei avoimia laskuja – ${safeAssoc}</p>`;
 
   const grouped: Record<string, typeof open> = {};
   for (const inv of open) {
@@ -32,7 +34,7 @@ function buildInvoiceAgingHtml(assocName: string, invoices: { invoiceNumber: str
     grouped[bucket].push(inv);
   }
 
-  let html = `<h2 style="font-size:16px;margin:24px 0 8px">${assocName} — Laskujen ikäanalyysi</h2>`;
+  let html = `<h2 style="font-size:16px;margin:24px 0 8px">${safeAssoc} — Laskujen ikäanalyysi</h2>`;
   html += `<table style="border-collapse:collapse;width:100%;font-size:13px">`;
   html += `<thead><tr style="background:#f3f4f6"><th style="text-align:left;padding:6px 12px">Lasku</th><th style="text-align:left;padding:6px 12px">Jäsen</th><th style="text-align:left;padding:6px 12px">Eräpäivä</th><th style="text-align:left;padding:6px 12px">Ikä</th><th style="text-align:right;padding:6px 12px">Avoinna</th></tr></thead>`;
   html += `<tbody>`;
@@ -44,8 +46,8 @@ function buildInvoiceAgingHtml(assocName: string, invoices: { invoiceNumber: str
     for (const inv of rows) {
       const remaining = inv.totalAmount - (inv.paidAmount ?? 0);
       html += `<tr style="border-top:1px solid #e5e7eb">`;
-      html += `<td style="padding:4px 12px;font-family:monospace">${inv.invoiceNumber}</td>`;
-      html += `<td style="padding:4px 12px">${inv.member.name}</td>`;
+      html += `<td style="padding:4px 12px;font-family:monospace">${escapeHtml(inv.invoiceNumber)}</td>`;
+      html += `<td style="padding:4px 12px">${escapeHtml(inv.member.name)}</td>`;
       html += `<td style="padding:4px 12px">${fmtDate(inv.dueDate)}</td>`;
       html += `<td style="padding:4px 12px">${bucket}</td>`;
       html += `<td style="padding:4px 12px;text-align:right">${fmtEur(remaining)}</td>`;
@@ -83,18 +85,18 @@ function buildIncomeStatementHtml(assocName: string, fyYear: number, vouchers: {
   const totalExpense = expense.reduce((s, a) => s + (a.debit - a.credit), 0);
   const result = totalIncome - totalExpense;
 
-  let html = `<h2 style="font-size:16px;margin:24px 0 8px">${assocName} — Tuloslaskelma ${fyYear}</h2>`;
+  let html = `<h2 style="font-size:16px;margin:24px 0 8px">${escapeHtml(assocName)} — Tuloslaskelma ${fyYear}</h2>`;
   html += `<table style="border-collapse:collapse;width:100%;font-size:13px">`;
   html += `<thead><tr style="background:#f3f4f6"><th style="text-align:left;padding:6px 12px">Tili</th><th style="text-align:right;padding:6px 12px">Summa</th></tr></thead>`;
   html += `<tbody>`;
   html += `<tr><td colspan="2" style="padding:6px 12px;font-weight:600;background:#e5e7eb">TUOTOT</td></tr>`;
   for (const a of income.sort((x, y) => x.number.localeCompare(y.number))) {
-    html += `<tr style="border-top:1px solid #e5e7eb"><td style="padding:4px 12px">${a.number} ${a.name}</td><td style="padding:4px 12px;text-align:right">${fmtEur(a.credit - a.debit)}</td></tr>`;
+    html += `<tr style="border-top:1px solid #e5e7eb"><td style="padding:4px 12px">${escapeHtml(a.number)} ${escapeHtml(a.name)}</td><td style="padding:4px 12px;text-align:right">${fmtEur(a.credit - a.debit)}</td></tr>`;
   }
   html += `<tr style="font-weight:600;border-top:2px solid #9ca3af"><td style="padding:4px 12px">Tuotot yhteensä</td><td style="padding:4px 12px;text-align:right">${fmtEur(totalIncome)}</td></tr>`;
   html += `<tr><td colspan="2" style="padding:6px 12px;font-weight:600;background:#e5e7eb">KULUT</td></tr>`;
   for (const a of expense.sort((x, y) => x.number.localeCompare(y.number))) {
-    html += `<tr style="border-top:1px solid #e5e7eb"><td style="padding:4px 12px">${a.number} ${a.name}</td><td style="padding:4px 12px;text-align:right">${fmtEur(a.debit - a.credit)}</td></tr>`;
+    html += `<tr style="border-top:1px solid #e5e7eb"><td style="padding:4px 12px">${escapeHtml(a.number)} ${escapeHtml(a.name)}</td><td style="padding:4px 12px;text-align:right">${fmtEur(a.debit - a.credit)}</td></tr>`;
   }
   html += `<tr style="font-weight:600;border-top:2px solid #9ca3af"><td style="padding:4px 12px">Kulut yhteensä</td><td style="padding:4px 12px;text-align:right">${fmtEur(totalExpense)}</td></tr>`;
   html += `<tr style="font-weight:700;border-top:3px solid #374151;background:#f9fafb"><td style="padding:8px 12px">TULOS</td><td style="padding:8px 12px;text-align:right;color:${result >= 0 ? "#16a34a" : "#dc2626"}">${fmtEur(result)}</td></tr>`;

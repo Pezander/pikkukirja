@@ -47,10 +47,28 @@ export async function POST(
   if (!fyOk) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const body = await req.json();
-  const { unitPrice, adminFee, memberTypeFees, issueDate, dueDate, memberIds } = body;
+  const { unitPrice, adminFee, memberTypeFees, issueDate, dueDate, memberIds, force } = body;
 
   if (!issueDate || !dueDate) {
     return NextResponse.json({ error: "issueDate and dueDate required" }, { status: 400 });
+  }
+
+  // Refuse to regenerate if any existing invoice in this fiscal year has payments —
+  // deleting them cascades and destroys payment history. Caller must pass force=true.
+  if (!force) {
+    const paidCount = await prisma.invoice.count({
+      where: { fiscalYearId: fyId, payments: { some: {} } },
+    });
+    if (paidCount > 0) {
+      return NextResponse.json(
+        {
+          error: "INVOICES_HAVE_PAYMENTS",
+          message: `Tilikaudessa on ${paidCount} laskua, joihin on kohdistettu maksuja. Uudelleenluonti poistaisi maksuhistorian. Vahvista tarvittaessa "Pakota uudelleenluonti".`,
+          paidCount,
+        },
+        { status: 409 }
+      );
+    }
   }
 
   const association = await prisma.association.findUnique({ where: { id } });

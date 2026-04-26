@@ -13,6 +13,8 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   const session = await auth();
   if (!session?.user?.email) return null;
   const user = session.user as SessionUser;
+  // Session callback zeros these out when the underlying DB user is gone.
+  if (!user.id || !user.role) return null;
   return user;
 }
 

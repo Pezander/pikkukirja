@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAssociationEditor } from "@/lib/auth-helpers";
 import { isSmtpConfigured, createTransport, SMTP_FROM } from "@/lib/smtp";
+import { escapeHtml } from "@/lib/utils";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { InvoicePDF } from "@/components/invoice/InvoicePDF";
 import React from "react";
@@ -54,17 +55,17 @@ export async function POST(
 
   const subject = `Lasku ${invoice.invoiceNumber} – ${association.name}`;
   const html = `
-    <p>Hyvä ${invoice.member.name},</p>
-    <p>ohessa lasku <strong>${invoice.invoiceNumber}</strong> organisaatiolta <strong>${association.name}</strong>.</p>
+    <p>Hyvä ${escapeHtml(invoice.member.name)},</p>
+    <p>ohessa lasku <strong>${escapeHtml(invoice.invoiceNumber)}</strong> organisaatiolta <strong>${escapeHtml(association.name)}</strong>.</p>
     <table style="border-collapse:collapse;margin:12px 0">
       <tr><td style="padding:3px 12px 3px 0;color:#555">Laskupäivä</td><td>${fmtDate(invoice.issueDate.toISOString())}</td></tr>
       <tr><td style="padding:3px 12px 3px 0;color:#555">Eräpäivä</td><td><strong>${fmtDate(invoice.dueDate.toISOString())}</strong></td></tr>
       <tr><td style="padding:3px 12px 3px 0;color:#555">Summa</td><td><strong>${fmtEur(invoice.totalAmount)}</strong></td></tr>
-      <tr><td style="padding:3px 12px 3px 0;color:#555">Viitenumero</td><td><code>${invoice.member.referenceNumber}</code></td></tr>
-      ${association.iban ? `<tr><td style="padding:3px 12px 3px 0;color:#555">IBAN</td><td>${association.iban}</td></tr>` : ""}
+      <tr><td style="padding:3px 12px 3px 0;color:#555">Viitenumero</td><td><code>${escapeHtml(invoice.member.referenceNumber)}</code></td></tr>
+      ${association.iban ? `<tr><td style="padding:3px 12px 3px 0;color:#555">IBAN</td><td>${escapeHtml(association.iban)}</td></tr>` : ""}
     </table>
     <p>Lasku on liitetty tähän viestiin PDF-muodossa.</p>
-    <p style="color:#555">Ystävällisin terveisin,<br>${association.name}</p>
+    <p style="color:#555">Ystävällisin terveisin,<br>${escapeHtml(association.name)}</p>
   `;
 
   const transport = createTransport();
