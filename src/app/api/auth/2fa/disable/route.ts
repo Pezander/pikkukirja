@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
   const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
   if (!dbUser) return NextResponse.json({ error: "Käyttäjää ei löydy." }, { status: 404 });
 
+  if (!dbUser.passwordHash) return NextResponse.json({ error: "Tili käyttää Google-kirjautumista." }, { status: 400 });
   const valid = await bcrypt.compare(password, dbUser.passwordHash);
   if (!valid) return NextResponse.json({ error: "Väärä salasana." }, { status: 403 });
 

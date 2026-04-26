@@ -13,7 +13,7 @@ model User {
   id               String    @id @default(cuid())
   name             String
   email            String    @unique
-  passwordHash     String
+  passwordHash     String?
   role             String    @default("user") // "admin" | "user"
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
@@ -22,6 +22,8 @@ model User {
   totpSecret       String?
   totpEnabled      Boolean   @default(false)
   backupCodes      String    @default("[]") // JSON array of SHA-256 hashed one-time codes
+  googleId         String?   @unique
+  authProvider     String    @default("credentials") // "credentials" | "google"
 
   accesses         AssociationAccess[]
 }
@@ -47,6 +49,19 @@ model AssociationAccess {
   association   Association @relation(fields: [associationId], references: [id], onDelete: Cascade)
 
   @@unique([userId, associationId])
+}
+
+model Invite {
+  id            String      @id @default(cuid())
+  email         String      @unique
+  role          String
+  associationId String
+  association   Association @relation(fields: [associationId], references: [id])
+  invitedById   String
+  token         String      @unique @default(cuid())
+  expiresAt     DateTime
+  usedAt        DateTime?
+  createdAt     DateTime    @default(now())
 }
 
 // ─── Associations ────────────────────────────────────────────────────────────
@@ -76,6 +91,7 @@ model Association {
   attachments           VoucherAttachment[]
   bankStatements        BankStatement[]
   roadUnitCalculations  RoadUnitCalculation[]
+  invites               Invite[]
 }
 
 // ─── Fiscal Years ────────────────────────────────────────────────────────────

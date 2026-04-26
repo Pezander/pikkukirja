@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Shield, AlertTriangle, ClipboardList, Mail, Clock, Database } from "lucide-react";
+import { Plus, Pencil, Trash2, Shield, AlertTriangle, ClipboardList, Mail, Clock, Database, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
@@ -140,6 +140,12 @@ export default function AdminUsersPage() {
             <h1 className="text-2xl font-bold">Käyttäjähallinta</h1>
           </div>
           <div className="flex gap-2">
+            <Link href="/admin/invites">
+              <Button variant="outline">
+                <UserPlus className="mr-2 h-4 w-4" />
+                Google-kutsut
+              </Button>
+            </Link>
             <Link href="/admin/smtp">
               <Button variant="outline">
                 <Mail className="mr-2 h-4 w-4" />

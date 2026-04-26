@@ -1,5 +1,6 @@
 import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { verifyTotp, verifyBackupCode, decryptTotpSecret } from "@/lib/totp";
@@ -19,6 +20,10 @@ class RateLimitError extends CredentialsSignin {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
     Credentials({
       credentials: {
         email: { label: "Sähköposti", type: "email" },
@@ -34,7 +39,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (rl.limited) throw new RateLimitError();
 
         const user = await prisma.user.findUnique({ where: { email } });
-        if (!user) {
+        if (!user || !user.passwordHash) {
           recordFailure(email);
           return null;
         }
@@ -71,10 +76,50 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    async signIn({ user, account }) {
+      if (account?.provider !== "google") return true;
+
+      const email = user.email!;
+      const now = new Date();
+
+      const invite = await prisma.invite.findUnique({ where: { email } });
+      if (!invite || invite.usedAt || invite.expiresAt < now) return false;
+
+      const existing = await prisma.user.findUnique({ where: { email } });
+      if (!existing) {
+        const newUser = await prisma.user.create({
+          data: {
+            name: user.name ?? email,
+            email,
+            passwordHash: null,
+            role: invite.role,
+            googleId: user.id,
+            authProvider: "google",
+          },
+        });
+        await prisma.associationAccess.create({
+          data: { userId: newUser.id, associationId: invite.associationId },
+        });
+      } else if (!existing.googleId) {
+        await prisma.user.update({
+          where: { id: existing.id },
+          data: { googleId: user.id, authProvider: "google" },
+        });
+      }
+
+      await prisma.invite.update({ where: { email }, data: { usedAt: now } });
+      return true;
+    },
+    async jwt({ token, user, account }) {
       if (user) {
-        token.id = user.id;
-        token.role = (user as { role: string }).role;
+        if (account?.provider === "google") {
+          const dbUser = await prisma.user.findUnique({ where: { email: token.email! } });
+          token.id = dbUser!.id;
+          token.role = dbUser!.role;
+        } else {
+          token.id = user.id;
+          token.role = (user as { role: string }).role;
+        }
       }
       return token;
     },
