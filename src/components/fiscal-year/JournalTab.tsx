@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Pencil, Trash2, Copy, Paperclip, Search } from "lucide-react";
+import { Pencil, Trash2, Copy, Paperclip, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Voucher } from "@/app/associations/[id]/fiscal-years/[fyId]/page";
+
+const PAGE_SIZE = 50;
 
 interface Props {
   vouchers: Voucher[];
@@ -25,6 +27,7 @@ function formatEur(n: number) {
 
 export function JournalTab({ vouchers, canEdit, onEdit, onDelete, onCopy }: Props) {
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(0);
 
   const filtered = query.trim()
     ? vouchers.filter((v) => {
@@ -41,6 +44,13 @@ export function JournalTab({ vouchers, canEdit, onEdit, onDelete, onCopy }: Prop
         );
       })
     : vouchers;
+
+  // Reset to first page whenever the filter changes
+  useEffect(() => { setPage(0); }, [query]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages - 1);
+  const visible = filtered.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
 
   if (vouchers.length === 0) {
     return (
@@ -70,7 +80,7 @@ export function JournalTab({ vouchers, canEdit, onEdit, onDelete, onCopy }: Prop
         </div>
       )}
 
-      {filtered.map((v) => {
+      {visible.map((v) => {
         const totalDebit = v.lines.reduce((s, l) => s + l.debit, 0);
         return (
           <Card key={v.id} className="overflow-hidden">
@@ -144,6 +154,30 @@ export function JournalTab({ vouchers, canEdit, onEdit, onDelete, onCopy }: Prop
           </Card>
         );
       })}
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-2 text-sm text-muted-foreground">
+          <span>
+            {safePage * PAGE_SIZE + 1}–{Math.min((safePage + 1) * PAGE_SIZE, filtered.length)} / {filtered.length} tositetta
+          </span>
+          <div className="flex gap-1">
+            <Button
+              variant="outline" size="icon" className="h-7 w-7"
+              disabled={safePage === 0}
+              onClick={() => setPage(safePage - 1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline" size="icon" className="h-7 w-7"
+              disabled={safePage >= totalPages - 1}
+              onClick={() => setPage(safePage + 1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -115,6 +115,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async jwt({ token, user, account }) {
       if (user) {
+        // New sign-in — record the login event and stamp iat for session invalidation checks
         if (account?.provider === "google") {
           const dbUser = await prisma.user.findUnique({ where: { email: token.email! } });
           token.id = dbUser!.id;
@@ -123,6 +124,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.id = user.id;
           token.role = (user as { role: string }).role;
         }
+        // Record login event (best-effort)
+        prisma.loginEvent.create({
+          data: {
+            userId: token.id as string,
+            provider: account?.provider ?? "credentials",
+          },
+        }).catch((err) => console.error("[auth] loginEvent create failed:", err));
       }
       return token;
     },
@@ -132,11 +140,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // rather than waiting for the JWT to expire.
       const dbUser = await prisma.user.findUnique({
         where: { id: token.id as string },
-        select: { id: true, role: true },
+        select: { id: true, role: true, sessionsInvalidatedAt: true },
       });
       if (!dbUser) {
         // User was deleted — invalidate the session.
         return { ...session, user: { ...session.user, id: "", role: "" } };
+      }
+      // If the user triggered "sign out all sessions", invalidate JWTs issued before that time.
+      if (dbUser.sessionsInvalidatedAt) {
+        const issuedAt = (token.iat as number) * 1000;
+        if (issuedAt < dbUser.sessionsInvalidatedAt.getTime()) {
+          return { ...session, user: { ...session.user, id: "", role: "" } };
+        }
       }
       session.user.id = dbUser.id;
       (session.user as unknown as { role: string }).role = dbUser.role;

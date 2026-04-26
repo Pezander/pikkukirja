@@ -4,8 +4,10 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Account, Voucher } from "@/app/associations/[id]/fiscal-years/[fyId]/page";
+
+const ENTRY_PAGE_SIZE = 100;
 
 interface Props {
   vouchers: Voucher[];
@@ -32,6 +34,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 export function LedgerTab({ vouchers, accounts, associationId, fiscalYearId }: Props) {
   const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
+  const [entryPage, setEntryPage] = useState<Record<string, number>>({});
 
   // Build per-account summary
   const summary = accounts.map((acc) => {
@@ -109,34 +112,63 @@ export function LedgerTab({ vouchers, accounts, associationId, fiscalYearId }: P
                     </div>
                   </CardHeader>
 
-                  {selectedAccount === item.account.id && (
-                    <CardContent className="pt-0 pb-3">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="text-xs text-muted-foreground border-b">
-                            <th className="text-left py-1 font-normal">Päivä</th>
-                            <th className="text-left py-1 font-normal pl-2">Tosite</th>
-                            <th className="text-left py-1 font-normal pl-2">Kuvaus</th>
-                            <th className="text-right py-1 font-normal">Debet</th>
-                            <th className="text-right py-1 font-normal">Kredit</th>
-                            <th className="text-right py-1 font-normal">Saldo</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {item.entries.map((e, i) => (
-                            <tr key={i} className="border-b last:border-0 hover:bg-muted/20">
-                              <td className="py-1.5 text-muted-foreground">{formatDate(e.date)}</td>
-                              <td className="py-1.5 pl-2 font-mono text-muted-foreground">#{e.voucherNumber}</td>
-                              <td className="py-1.5 pl-2">{e.description}</td>
-                              <td className="py-1.5 text-right tabular-nums">{e.debit > 0 ? formatEur(e.debit) : ""}</td>
-                              <td className="py-1.5 text-right tabular-nums">{e.credit > 0 ? formatEur(e.credit) : ""}</td>
-                              <td className="py-1.5 text-right tabular-nums font-medium">{formatEur(Math.abs(e.balance))}</td>
+                  {selectedAccount === item.account.id && (() => {
+                    const pg = entryPage[item.account.id] ?? 0;
+                    const totalPg = Math.max(1, Math.ceil(item.entries.length / ENTRY_PAGE_SIZE));
+                    const safePg = Math.min(pg, totalPg - 1);
+                    const visibleEntries = item.entries.slice(safePg * ENTRY_PAGE_SIZE, (safePg + 1) * ENTRY_PAGE_SIZE);
+                    return (
+                      <CardContent className="pt-0 pb-3">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="text-xs text-muted-foreground border-b">
+                              <th className="text-left py-1 font-normal">Päivä</th>
+                              <th className="text-left py-1 font-normal pl-2">Tosite</th>
+                              <th className="text-left py-1 font-normal pl-2">Kuvaus</th>
+                              <th className="text-right py-1 font-normal">Debet</th>
+                              <th className="text-right py-1 font-normal">Kredit</th>
+                              <th className="text-right py-1 font-normal">Saldo</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </CardContent>
-                  )}
+                          </thead>
+                          <tbody>
+                            {visibleEntries.map((e, i) => (
+                              <tr key={i} className="border-b last:border-0 hover:bg-muted/20">
+                                <td className="py-1.5 text-muted-foreground">{formatDate(e.date)}</td>
+                                <td className="py-1.5 pl-2 font-mono text-muted-foreground">#{e.voucherNumber}</td>
+                                <td className="py-1.5 pl-2">{e.description}</td>
+                                <td className="py-1.5 text-right tabular-nums">{e.debit > 0 ? formatEur(e.debit) : ""}</td>
+                                <td className="py-1.5 text-right tabular-nums">{e.credit > 0 ? formatEur(e.credit) : ""}</td>
+                                <td className="py-1.5 text-right tabular-nums font-medium">{formatEur(Math.abs(e.balance))}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        {totalPg > 1 && (
+                          <div className="flex items-center justify-between pt-2 text-xs text-muted-foreground">
+                            <span>
+                              {safePg * ENTRY_PAGE_SIZE + 1}–{Math.min((safePg + 1) * ENTRY_PAGE_SIZE, item.entries.length)} / {item.entries.length}
+                            </span>
+                            <div className="flex gap-1">
+                              <Button
+                                variant="outline" size="icon" className="h-6 w-6"
+                                disabled={safePg === 0}
+                                onClick={(ev) => { ev.stopPropagation(); setEntryPage((p) => ({ ...p, [item.account.id]: safePg - 1 })); }}
+                              >
+                                <ChevronLeft className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="outline" size="icon" className="h-6 w-6"
+                                disabled={safePg >= totalPg - 1}
+                                onClick={(ev) => { ev.stopPropagation(); setEntryPage((p) => ({ ...p, [item.account.id]: safePg + 1 })); }}
+                              >
+                                <ChevronRight className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    );
+                  })()}
                 </Card>
               ))}
             </div>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth-helpers";
 import { readSmtpConfig, writeSmtpConfig } from "@/lib/smtp-config";
 import { isSmtpConfigured } from "@/lib/smtp";
+import { logAction } from "@/lib/audit";
 
 export async function GET() {
   const result = await requireAdmin();
@@ -39,5 +40,6 @@ export async function PUT(req: NextRequest) {
   };
 
   writeSmtpConfig(updated);
+  logAction(result.user.id, result.user.name ?? result.user.email ?? "Tuntematon", "UPDATE", "SmtpConfig", "smtp", `SMTP-asetukset päivitetty (host: ${updated.host})`);
   return NextResponse.json({ ok: true });
 }

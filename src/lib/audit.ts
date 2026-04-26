@@ -23,7 +23,8 @@ export function logAction(
       entityId,
       description,
     },
-  }).catch(() => {
-    // Non-fatal — audit logging must never break the main operation
+  }).catch((err) => {
+    // Non-fatal, but surface to server logs so ops can detect persistent failures
+    console.error("[audit] logAction failed:", err);
   });
 }

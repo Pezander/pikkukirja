@@ -10,22 +10,36 @@ datasource db {
 // ─── Users & Auth ────────────────────────────────────────────────────────────
 
 model User {
-  id               String    @id @default(cuid())
-  name             String
-  email            String    @unique
-  passwordHash     String?
-  role             String    @default("user") // "admin" | "user"
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  resetToken       String?
-  resetTokenExpiry DateTime?
-  totpSecret       String?
-  totpEnabled      Boolean   @default(false)
-  backupCodes      String    @default("[]") // JSON array of SHA-256 hashed one-time codes
-  googleId         String?   @unique
-  authProvider     String    @default("credentials") // "credentials" | "google"
+  id                      String    @id @default(cuid())
+  name                    String
+  email                   String    @unique
+  passwordHash            String?
+  role                    String    @default("user") // "admin" | "user"
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  resetToken              String?
+  resetTokenExpiry        DateTime?
+  totpSecret              String?
+  totpEnabled             Boolean   @default(false)
+  backupCodes             String    @default("[]") // JSON array of SHA-256 hashed one-time codes
+  googleId                String?   @unique
+  authProvider            String    @default("credentials") // "credentials" | "google"
+  sessionsInvalidatedAt   DateTime? // invalidate JWTs issued before this timestamp
 
-  accesses         AssociationAccess[]
+  accesses                AssociationAccess[]
+  loginEvents             LoginEvent[]
+}
+
+// ─── Login Events ────────────────────────────────────────────────────────────
+
+model LoginEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider  String   @default("credentials") // "credentials" | "google"
+  ipAddress String   @default("")
+  userAgent String   @default("")
+  timestamp DateTime @default(now())
 }
 
 // ─── Audit Log ───────────────────────────────────────────────────────────────

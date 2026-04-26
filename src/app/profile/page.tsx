@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowLeft, KeyRound, ShieldCheck, ShieldOff } from "lucide-react";
+import { ArrowLeft, KeyRound, ShieldCheck, ShieldOff, History, Download, LogOut } from "lucide-react";
 import Link from "next/link";
 
 // ─── Password change ──────────────────────────────────────────────────────────
@@ -374,6 +374,110 @@ function TwoFACard() {
   );
 }
 
+// ─── Login history & session management ──────────────────────────────────────
+
+interface LoginEvent {
+  id: string;
+  provider: string;
+  ipAddress: string;
+  userAgent: string;
+  timestamp: string;
+}
+
+function LoginHistoryCard() {
+  const [events, setEvents] = useState<LoginEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [invalidating, setInvalidating] = useState(false);
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/login-history")
+      .then((r) => r.json())
+      .then((d) => { setEvents(d); setLoading(false); });
+  }, []);
+
+  async function handleInvalidate() {
+    if (!confirm("Tämä kirjaa sinut ulos kaikilta laitteilta. Haluatko jatkaa?")) return;
+    setInvalidating(true);
+    await fetch("/api/auth/sessions", { method: "POST" });
+    setDone(true);
+    setInvalidating(false);
+    // Give the user a moment to read the confirmation, then sign out locally too
+    setTimeout(() => signOut({ callbackUrl: "/login" }), 1500);
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <History className="h-5 w-5 text-primary" />
+            <CardTitle>Kirjautumishistoria</CardTitle>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleInvalidate}
+            disabled={invalidating || done}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            {done ? "Kirjaudutaan ulos…" : "Kirjaudu ulos kaikilta laitteilta"}
+          </Button>
+        </div>
+        <CardDescription>Viimeiset 50 kirjautumista tällä tilillä.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Ladataan…</p>
+        ) : events.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Ei kirjautumisia.</p>
+        ) : (
+          <div className="space-y-1">
+            {events.map((ev) => (
+              <div key={ev.id} className="flex items-center justify-between text-sm py-1.5 border-b last:border-0">
+                <div className="flex items-center gap-3">
+                  <span className="text-muted-foreground text-xs font-mono w-20">{ev.provider}</span>
+                  <span className="text-muted-foreground text-xs truncate max-w-xs">{ev.userAgent || "—"}</span>
+                </div>
+                <span className="text-xs text-muted-foreground shrink-0">
+                  {new Date(ev.timestamp).toLocaleString("fi-FI")}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── GDPR export ──────────────────────────────────────────────────────────────
+
+function GdprCard() {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <Download className="h-5 w-5 text-primary" />
+          <CardTitle>Omat tiedot (GDPR)</CardTitle>
+        </div>
+        <CardDescription>
+          Lataa kaikki sinusta tallennettu tieto JSON-muodossa rekisteröidyn oikeuksien mukaisesti.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Button
+          variant="outline"
+          onClick={() => window.open("/api/profile/gdpr-export", "_blank")}
+        >
+          <Download className="mr-2 h-4 w-4" />
+          Lataa tietojeni kopio
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ProfilePage() {
@@ -391,6 +495,8 @@ export default function ProfilePage() {
         <div className="space-y-6">
           <PasswordCard />
           {isAdmin && <TwoFACard />}
+          <LoginHistoryCard />
+          <GdprCard />
         </div>
       </div>
     </div>

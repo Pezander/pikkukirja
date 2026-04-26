@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth-helpers";
+import { logAction } from "@/lib/audit";
 
 export async function GET() {
   const result = await requireAdmin();
@@ -38,5 +39,6 @@ export async function POST(req: NextRequest) {
         data: { email, role, associationId, invitedById: result.user.id, expiresAt },
       });
 
+  logAction(result.user.id, result.user.name ?? result.user.email ?? "Tuntematon", "CREATE", "Invite", invite.id, `Kutsu: ${email} (rooli: ${role})`);
   return NextResponse.json(invite, { status: 201 });
 }

@@ -58,6 +58,7 @@ export async function PUT(
     include: { lines: { include: { account: true } } },
   });
 
+  logAction(result.user.id, result.user.name ?? result.user.email ?? "Tuntematon", "UPDATE", "Voucher", voucher.id, `Tosite #${voucher.number}: ${voucher.description}`);
   return jsonResponse(voucher);
 }
 
