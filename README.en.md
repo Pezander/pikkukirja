@@ -175,6 +175,7 @@ Each organisation type comes with its own chart of accounts, invoice accounts, a
 | **Viewer** | Read-only access to their own organisations |
 
 - Per-user access to organisations
+- **Google Sign-In** — sign in with a Google account instead of a password; access requires an admin-issued invite (valid for 7 days)
 - Password policy: minimum 8 characters + a digit or special character
 - Password change from profile; recovery link by email
 - **Two-factor authentication (2FA)** — TOTP-based (Google Authenticator, Aegis, etc.); mandatory for admin users; 10 single-use backup codes
@@ -213,7 +214,7 @@ Each organisation type comes with its own chart of accounts, invoice accounts, a
 | Database | SQLite (better-sqlite3) |
 | ORM | Prisma 7 |
 | UI | shadcn/ui + Tailwind CSS 4 |
-| Authentication | NextAuth v5 (credentials) |
+| Authentication | NextAuth v5 (credentials + Google OAuth) |
 | PDF generation | @react-pdf/renderer |
 | XML parsing | fast-xml-parser (CAMT.053) |
 | Barcodes | bwip-js |

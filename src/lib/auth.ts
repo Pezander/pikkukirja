@@ -82,10 +82,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const email = user.email!;
       const now = new Date();
 
+      // Returning Google user — already in the system, let them through
+      const existing = await prisma.user.findUnique({ where: { email } });
+      if (existing?.googleId) return true;
+
       const invite = await prisma.invite.findUnique({ where: { email } });
       if (!invite || invite.usedAt || invite.expiresAt < now) return false;
 
-      const existing = await prisma.user.findUnique({ where: { email } });
       if (!existing) {
         const newUser = await prisma.user.create({
           data: {

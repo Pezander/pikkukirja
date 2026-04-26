@@ -171,6 +171,7 @@ Jokaisella organisaatiotyypillä on oma tilikartta, omat tilit laskuille ja rapo
 | **Vain luku** | Katseluoikeus omiin organisaatioihinsa |
 
 - Käyttäjäkohtainen pääsy organisaatioihin
+- **Google-kirjautuminen** — kirjaudu Google-tilillä salasanan sijaan; pääsy vaatii adminilta kutsun (7 vrk voimassa)
 - Salasanakäytäntö: vähintään 8 merkkiä + numero tai erikoismerkki
 - Salasanan vaihto profiilista; palautuslinkki sähköpostilla
 - **Kaksivaiheinen tunnistautuminen (2FA)** — TOTP-pohjainen (Google Authenticator, Aegis ym.) pakollinen admin-käyttäjille; 10 kertakäyttöistä varakoodia
@@ -209,7 +210,7 @@ Jokaisella organisaatiotyypillä on oma tilikartta, omat tilit laskuille ja rapo
 | Tietokanta | SQLite (better-sqlite3) |
 | ORM | Prisma 7 |
 | Käyttöliittymä | shadcn/ui + Tailwind CSS 4 |
-| Autentikaatio | NextAuth v5 (credentials) |
+| Autentikaatio | NextAuth v5 (credentials + Google OAuth) |
 | PDF-generointi | @react-pdf/renderer |
 | XML-parserointi | fast-xml-parser (CAMT.053) |
 | Viivakoodit | bwip-js |

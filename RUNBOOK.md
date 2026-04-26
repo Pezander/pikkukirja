@@ -62,6 +62,12 @@ AUTH_TRUST_HOST=true
 # Keep this key safe — losing it locks out all 2FA users.
 TOTP_ENCRYPTION_KEY="replace-this-with-64-hex-chars"
 
+# Google OAuth — required for "Sign in with Google" on the login page.
+# Create credentials at console.cloud.google.com (OAuth 2.0 Client ID → Web application).
+# Authorised redirect URI: https://yourdomain.fi/api/auth/callback/google
+GOOGLE_CLIENT_ID="replace-with-your-google-client-id"
+GOOGLE_CLIENT_SECRET="replace-with-your-google-client-secret"
+
 # Optional: SMTP for sending invoices by email
 # These env vars take priority over the UI settings (Admin → SMTP-asetukset).
 # Leave commented out to configure SMTP through the admin UI instead.
