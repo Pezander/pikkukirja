@@ -292,7 +292,10 @@ export default function AssociationPage() {
                               {formatEur(b.actual)} / {formatEur(b.budget)}
                             </span>
                           </div>
-                          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className="rounded-full bg-muted overflow-hidden"
+                            style={{ height: "var(--progress-h)" }}
+                          >
                             <div
                               className={`h-full rounded-full transition-all ${over ? "bg-destructive" : "bg-primary"}`}
                               style={{ width: `${pct}%` }}

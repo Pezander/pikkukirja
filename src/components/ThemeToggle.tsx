@@ -8,9 +8,9 @@ import { applyTheme } from "@/components/ThemeProvider";
 type Palette = "tuli" | "jaa" | "sammal";
 
 const PALETTES: { key: Palette; label: string; swatch: string }[] = [
-  { key: "tuli",   label: "Tuli",   swatch: "oklch(0.510 0.130 35)"  },
-  { key: "jaa",    label: "Jää",    swatch: "oklch(0.490 0.120 265)" },
-  { key: "sammal", label: "Sammal", swatch: "oklch(0.420 0.080 150)" },
+  { key: "tuli",   label: "Tuli",   swatch: "oklch(0.440 0.165 18)"  },
+  { key: "jaa",    label: "Jää",    swatch: "oklch(0.488 0.122 268)" },
+  { key: "sammal", label: "Sammal", swatch: "oklch(0.418 0.082 152)" },
 ];
 
 export function ThemeToggle() {
