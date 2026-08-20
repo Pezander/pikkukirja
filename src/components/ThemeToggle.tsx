@@ -19,6 +19,7 @@ export function ThemeToggle() {
   const [open,    setOpen]    = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDark(document.documentElement.classList.contains("dark"));
     setPalette((localStorage.getItem("palette") as Palette) ?? "tuli");
   }, []);

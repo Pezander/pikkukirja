@@ -186,6 +186,7 @@ export default function TieyksiköintiPage() {
     setLoading(false);
   }, [loadAssoc, loadMembers, loadCalcs]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadAll(); }, [loadAll]);
 
   async function loadCalcDetail(calcId: string) {

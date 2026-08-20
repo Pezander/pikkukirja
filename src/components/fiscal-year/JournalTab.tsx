@@ -46,6 +46,7 @@ export function JournalTab({ vouchers, canEdit, onEdit, onDelete, onCopy }: Prop
     : vouchers;
 
   // Reset to first page whenever the filter changes
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setPage(0); }, [query]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
