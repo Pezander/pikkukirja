@@ -40,7 +40,13 @@
     "fast-uri": "^3.1.8",
     "hono": "^4.13.7",
     "qs": "^6.16.0",
-    "js-yaml": "^4.3.2"
+    "js-yaml": "^4.3.2",
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.1"
+    },
+    "@ts-morph/common": {
+      "minimatch": "^11.0.1"
+    }
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
